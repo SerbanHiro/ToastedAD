@@ -1,0 +1,8 @@
+name: ToastedAD
+version: '${project.version}'
+main: me.serbob.toastedad.ToastedAD
+api-version: 1.13
+commands:
+  ad:
+    description: test
+    permission: toastedad.use
