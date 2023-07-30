@@ -11,6 +11,8 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
@@ -22,63 +24,95 @@ public class AD implements CommandExecutor {
     public boolean isFormat =false,useColor=false;
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        if(!(sender instanceof Player)) {
-            sender.sendMessage(ChatColor.RED+"You are not a player!");
+        if (!(sender instanceof Player)) {
+            sender.sendMessage(ChatColor.RED + "You are not a player!");
             return false;
         }
-        if(!sender.hasPermission("toastedad.use")) {
-            sender.sendMessage(ToastedUtil.c(ToastedAD.instance.getConfig().getString("Messages.no_perms")));
-            return false;
-        }
-        if(args.length<1) {
-            sender.sendMessage(ToastedUtil.c(ToastedAD.instance.getConfig().getString("Messages.usage")));
-            return false;
-        }
+
         Player player = (Player) sender;
-        if(args[0].equalsIgnoreCase("<time>")) {
-            if(playerTime.containsKey(player)) {
-                sender.sendMessage(ToastedUtil.c(
-                                ToastedAD.instance.getConfig().getString("Messages.check_cooldown"))
-                        .replace("{cooldown}",playerTime.get(player)+""));
-            } else {
-                sender.sendMessage(ToastedUtil.c("You can now advertise."));
-            }
-            return true;
-        }
-        if(playerTime.containsKey(player)) {
-            sender.sendMessage(ToastedUtil.c(
-                    ToastedAD.instance.getConfig().getString("Messages.cooldown"))
-                    .replace("{cooldown}",playerTime.get(player)+""));
+
+        if (!checkPermission(player)) {
             return false;
         }
-        playerTime.putIfAbsent(player,shortestTime(player));
+
+        if (!checkArgsLength(player, args)) {
+            return false;
+        }
+
+        if (args[0].equalsIgnoreCase("<time>")) {
+            handleTimeCommand(player);
+        } else {
+            handleAdvertiseCommand(player, args);
+        }
+
+        return true;
+    }
+
+    private boolean checkPermission(Player player) {
+        if (!player.hasPermission("toastedad.use")) {
+            player.sendMessage(ToastedUtil.c(ToastedAD.instance.getConfig().getString("Messages.no_perms")));
+            return false;
+        }
+        return true;
+    }
+
+    private boolean checkArgsLength(Player player, String[] args) {
+        if (args.length < 1) {
+            player.sendMessage(ToastedUtil.c(ToastedAD.instance.getConfig().getString("Messages.usage")));
+            return false;
+        }
+        return true;
+    }
+
+    private void handleTimeCommand(Player player) {
+        if (playerTime.containsKey(player)) {
+            player.sendMessage(ToastedUtil.c(
+                            ToastedAD.instance.getConfig().getString("Messages.check_cooldown"))
+                    .replace("{cooldown}", playerTime.get(player) + ""));
+        } else {
+            player.sendMessage(ToastedUtil.c("You can now advertise."));
+        }
+    }
+
+    private void handleAdvertiseCommand(Player player, String[] args) {
+        if (playerTime.containsKey(player)) {
+            player.sendMessage(ToastedUtil.c(
+                            ToastedAD.instance.getConfig().getString("Messages.cooldown"))
+                    .replace("{cooldown}", playerTime.get(player) + ""));
+            return;
+        }
+
+        playerTime.putIfAbsent(player, shortestTime(player));
+        playAdvertiseSound();
+        String message = buildMessage(args);
+        broadcastAdvertiseMessage(player, message);
+    }
+
+    private void playAdvertiseSound() {
         try {
             for (Player p : Bukkit.getOnlinePlayers()) {
                 p.playSound(p.getLocation(), sound, volume, pitch);
             }
-        } catch (Exception ignored){};
-        String message="";
-        for(int i=0;i<args.length;++i)
-            message+=(args[i]+" ");
-        if(useColor) {
-            if(!isFormat) {
-                message = message.replace("&k","")
-                        .replace("&l","")
-                        .replace("&m","")
-                        .replace("&n","")
-                        .replace("&o","")
-                        .replace("&r","");
-            }
-            message = ToastedUtil.c(message);
+        } catch (Exception ignored) {
         }
-        String prefix=ToastedUtil.c(ToastedAD.instance.getConfig().getString(
-                "Messages.advertise_message"))
-                .replace("{player}",(player.getDisplayName()));
-        Bukkit.broadcastMessage(prefix.replace(
-                "{message}",message
-        ));
-        return true;
     }
+
+    private String buildMessage(String[] args) {
+        String message = String.join(" ", args);
+        if (useColor && !isFormat) {
+            message = message.replaceAll("&[klmnor]", "");
+        }
+        return useColor ? ToastedUtil.c(message) : message;
+    }
+
+    private void broadcastAdvertiseMessage(Player player, String message) {
+        for (String key : ToastedAD.instance.getConfig().getStringList("Messages.advertise_message")) {
+            String formattedMessage = key.replace("{player}", player.getDisplayName())
+                    .replace("{message}", message);
+            Bukkit.broadcastMessage(ToastedUtil.c(formattedMessage));
+        }
+    }
+
     public int shortestTime(Player player) {
         int shortTime=999999999;
         sound=null;
