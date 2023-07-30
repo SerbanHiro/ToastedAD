@@ -20,4 +20,8 @@ Messages:
   usage: "Usage: /ad {message}"
   check_cooldown: "You must wait {cooldown} seconds before you can advertise again"
   cooldown: "You must wait {cooldown} seconds before you can advertise again"
+  worlds_allowed:
+    - "world"
+    - "nether"
+    - "end" #etc.
 

@@ -106,12 +106,33 @@ public class AD implements CommandExecutor {
     }
 
     private void broadcastAdvertiseMessage(Player player, String message) {
+        List<String> worldsAllowed = ToastedAD.instance.getConfig().getStringList("Messages.worlds_allowed");
+        String playerWorld = player.getWorld().getName();
+
+        if (!worldsAllowed.contains(playerWorld)) {
+            return; // Player is not in an allowed world, do not broadcast the message
+        }
+
+        for (Player p : Bukkit.getOnlinePlayers()) {
+            String pWorld = p.getWorld().getName();
+            if (worldsAllowed.contains(pWorld)) {
+                // Player 'p' is in one of the allowed worlds, send the message to them
+                for (String key : ToastedAD.instance.getConfig().getStringList("Messages.advertise_message")) {
+                    String formattedMessage = key.replace("{player}", player.getDisplayName())
+                            .replace("{message}", message);
+                    p.sendMessage(ToastedUtil.c(formattedMessage));
+                }
+            }
+        }
+    }
+
+    /**private void broadcastAdvertiseMessage(Player player, String message) {
         for (String key : ToastedAD.instance.getConfig().getStringList("Messages.advertise_message")) {
             String formattedMessage = key.replace("{player}", player.getDisplayName())
                     .replace("{message}", message);
             Bukkit.broadcastMessage(ToastedUtil.c(formattedMessage));
         }
-    }
+    }*/
 
     public int shortestTime(Player player) {
         int shortTime=999999999;
