@@ -12,14 +12,13 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
 import static me.serbob.toastedad.ToastedAD.playerTime;
 
-public class AD implements CommandExecutor {
+public class ADCommand implements CommandExecutor {
     public Sound sound;
     public Float pitch=0.0F,volume=0.0F;
     public boolean isFormat =false,useColor=false;
@@ -66,24 +65,24 @@ public class AD implements CommandExecutor {
     }
 
     private void handleTimeCommand(Player player) {
-        if (playerTime.containsKey(player)) {
+        if (playerTime.containsKey(player.getName())) {
             player.sendMessage(ToastedUtil.c(
                             ToastedAD.instance.getConfig().getString("Messages.check_cooldown"))
-                    .replace("{cooldown}", playerTime.get(player) + ""));
+                    .replace("{cooldown}", playerTime.get(player.getName()) + ""));
         } else {
             player.sendMessage(ToastedUtil.c("You can now advertise."));
         }
     }
 
     private void handleAdvertiseCommand(Player player, String[] args) {
-        if (playerTime.containsKey(player)) {
+        if (playerTime.containsKey(player.getName())) {
             player.sendMessage(ToastedUtil.c(
                             ToastedAD.instance.getConfig().getString("Messages.cooldown"))
-                    .replace("{cooldown}", playerTime.get(player) + ""));
+                    .replace("{cooldown}", playerTime.get(player.getName()) + ""));
             return;
         }
 
-        playerTime.putIfAbsent(player, shortestTime(player));
+        playerTime.putIfAbsent(player.getName(), shortestTime(player));
         playAdvertiseSound();
         String message = buildMessage(args);
 

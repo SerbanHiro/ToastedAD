@@ -1,9 +1,9 @@
 package me.serbob.toastedad;
 
-import jdk.jfr.internal.Logger;
-import me.serbob.toastedad.Commands.AD;
+import me.serbob.toastedad.Commands.ADCommand;
+import me.serbob.toastedad.Managers.Config.CooldownsConfig;
 import me.serbob.toastedad.Metrics.Metrics;
-import me.serbob.toastedad.TabCompleter.ADTC;
+import me.serbob.toastedad.TabCompleter.ADTabCompleter;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
@@ -14,22 +14,34 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentHashMap;
 
 public final class ToastedAD extends JavaPlugin {
-    public static Map<Player,Integer> playerTime = new HashMap<>();
+    public static Map<String,Integer> playerTime = new ConcurrentHashMap<>();
     public static ToastedAD instance;
     @Override
     public void onEnable() {
         instance=this;
         saveDefaultConfig();
-        getCommand("ad").setExecutor(new AD());
-        getCommand("ad").setTabCompleter(new ADTC());
+        CooldownsConfig.saveDefaultCooldownsConfig();
+        CooldownsConfig.loadCooldownsFile();
+
+        getCommand("ad").setExecutor(new ADCommand());
+        getCommand("ad").setTabCompleter(new ADTabCompleter());
+
         registerPerms();
+
         startScheduler();
+        CooldownsConfig.loadCooldownedUsers();
+
         enableMetrics();
     }
     @Override
-    public void onDisable() {}
+    public void onDisable() {
+        for(String cooldownedPlayer:playerTime.keySet()) {
+            CooldownsConfig.addUserToCooldownsStorage(cooldownedPlayer);
+        }
+    }
     public void registerPerms() {
         ConfigurationSection permSection = ToastedAD.instance.getConfig().getConfigurationSection("Permissions");
         Set<String> perms = permSection.getKeys(false);
@@ -42,8 +54,8 @@ public final class ToastedAD extends JavaPlugin {
         }
     }
     public void startScheduler() {
-        getServer().getScheduler().scheduleSyncRepeatingTask(this, () -> {
-            for(Map.Entry<Player, Integer> entry:playerTime.entrySet()) {
+        getServer().getScheduler().scheduleAsyncRepeatingTask(this, () -> {
+            for(Map.Entry<String, Integer> entry:playerTime.entrySet()) {
                 int time = entry.getValue();
                 if(time==0) {
                     playerTime.remove(entry.getKey());
