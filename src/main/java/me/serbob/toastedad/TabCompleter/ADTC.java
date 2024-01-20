@@ -12,7 +12,7 @@ public class ADTC implements TabCompleter {
     public List<String> onTabComplete(CommandSender sender, Command command, String label, String[] args) {
         List<String> list = new ArrayList<>();
         if(args.length<2) {
-            list.add("<time>");
+            list.add("<description>");
         }
         return list;
     }

@@ -1,6 +1,7 @@
 package me.serbob.toastedad.Commands;
 
 import me.serbob.toastedad.ToastedAD;
+import me.serbob.toastedad.Events.PlayerAdvertiseEvent;
 import me.serbob.toastedad.Utils.ToastedUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -85,6 +86,12 @@ public class AD implements CommandExecutor {
         playerTime.putIfAbsent(player, shortestTime(player));
         playAdvertiseSound();
         String message = buildMessage(args);
+
+        // Create and call the PlayerAdvertiseEvent
+        PlayerAdvertiseEvent event = new PlayerAdvertiseEvent(player, message);
+        Bukkit.getServer().getPluginManager().callEvent(event);
+
+        // Broadcasting the advertisement
         broadcastAdvertiseMessage(player, message);
     }
 
