@@ -17,11 +17,12 @@ import java.util.List;
 public class CooldownsConfig {
     private static File cooldownsFile;
     private static YamlConfiguration cooldownsConfig;
+
     public static void loadCooldownsFile() {
         cooldownsFile = new File(ToastedAD.instance.getDataFolder(), "cooldowns.yml");
         cooldownsConfig = YamlConfiguration.loadConfiguration(cooldownsFile);
-        //return playtimeConfig;
     }
+
     public static void saveDefaultCooldownsConfig() {
         InputStream inputStream = ToastedAD.instance.getResource("cooldowns.yml");
         if (inputStream == null) {
@@ -39,6 +40,7 @@ public class CooldownsConfig {
             }
         }
     }
+
     public static void addUserToCooldownsStorage(String playerName) {
         int playerCooldown = ToastedAD.playerTime.get(playerName);
         String cooldownEntry = playerName + ":" + playerCooldown;
@@ -53,6 +55,7 @@ public class CooldownsConfig {
             e.printStackTrace();
         }
     }
+
     public static void loadCooldownedUsers() {
         List<String> cooldownsList = cooldownsConfig.getStringList("cooldowns_storage");
         for (String entry : cooldownsList) {

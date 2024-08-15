@@ -9,5 +9,8 @@
         <module name="ToastedAD" />
       </profile>
     </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="ToastedAD" target="1.8" />
+    </bytecodeTargetLevel>
   </component>
 </project>
